@@ -52,12 +52,12 @@ module.exports =
 
     # Allow to change field values of connector. That way the import can be
     # runned without loading the full web app.
-    # Expected format for fields is an array of string following this syntax:
-    # ["key1:value1", "key2:value2"]
+    # Expected format for fields is a mapping of fields names to values.
     change: (konnectorName, fields, callback) ->
         account = {}
-        for field in fields
-            [key, value] = field.split(/:(.+)?/)
+        for key, value of fields
+            if typeof value is "object"
+                value = JSON.stringify(value)
             account[key] = value
 
         Konnector = require '../server/models/konnector'

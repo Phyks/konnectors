@@ -34,8 +34,8 @@ else if program.change
 
     if program.fields
         konnectorName = program.change
-        fields = program.fields.split(',')
-        log.info "Changing fields for #{konnectorName} with #{fields}."
+        fields = JSON.parse(program.fields)
+        log.info "Changing fields for #{konnectorName} with #{program.fields}."
         connector.change konnectorName, fields, (err) ->
             if err
                 log.error "Failed to change fields."
