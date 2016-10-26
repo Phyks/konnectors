@@ -9,7 +9,6 @@
  */
 
 // NPM imports
-const async = require('async');
 const moment = require('moment');
 const requestJson = require('request-json');
 
@@ -32,11 +31,15 @@ const Converter = {
     // Conversion functions for CapDocument items to Bill
     'subscriptions': function (data, moduleName) {  // Weboob type: Subscription
         // Do nothing for subscriptions
+        return {
+            cozyModel: undefined,
+            parsedData: undefined,
+        };
     },
     'bills': function (data, moduleName) {  // Weboob type: Bill
         var parsedBills = [];
-        async.eachOfSeries(data, function (bills, subscriptionID) {
-            async.eachSeries(bills, function (bill) {
+        Object.keys(data).forEach(function (subscriptionID) {
+            data[subscriptionID].forEach(function (bill) {
                 // TODO: Label not mapped
                 parsedBills.push({
                     type: '',  // TODO: What is it?
@@ -62,8 +65,8 @@ const Converter = {
     },
     'history_bills': function (data, moduleName) {  // Weboob type: Details
         var parsedHistoryBills = [];
-        async.eachOfSeries(data, function (historyBills, subscriptionID) {
-            async.eachSeries(historyBills, function (historyBill) {
+        Object.keys(data).forEach(function (subscriptionID) {
+            data[subscriptionID].forEach(function (historyBill) {
                 // TODO: Infos / label / quantity / unit not mapped
                 parsedHistoryBills.push({
                     type: '',  // TODO: What is it?
@@ -86,8 +89,8 @@ const Converter = {
     },
     'detailed_bills': function (data, moduleName) {  // Weboob type: Details
         var parsedDetailedBills = [];
-        async.eachOfSeries(data, function (detailedBills, subscriptionID) {
-            async.eachSeries(detailedBills, function (detailedBill) {
+        Object.keys(data).forEach(function (subscriptionID) {
+            data[subscriptionID].forEach(function (detailedBill) {
                 parsedDetailedBills.push({
                     // TODO: Infos / label / quantity / unit not mapped
                     type: '',  // TODO: What is it?
@@ -159,11 +162,18 @@ function fetchData(requiredFields, entries, data, next) {
  */
 function parseData(requiredFields, entries, data, next) {
     data.parsedEntries = {};
-    async.eachOfSeries(data.rawEntries, function (moduleData, moduleName) {
-        async.eachOfSeries(moduleData, function (fieldData, weboobType) {
+    Object.keys(data.rawEntries).forEach(function (moduleName) {
+        let moduleData = data.rawEntries[moduleName];
+        Object.keys(moduleData).forEach(function (weboobType) {
+            if (Converter[weboobType] === undefined) {
+                return;
+            }
+            let fieldData = moduleData[weboobType];
             // Convert all the available entries and store them in parsed
             // entries
             let { cozyModel, parsedData } = Converter[weboobType](fieldData, moduleName);
+            console.log(cozyModel);
+            console.log(parsedData);
             if (cozyModel !== undefined && parsedData !== undefined) {
                 data.parsedEntries[cozyModel] = [].concat(
                     data.parsedEntries[cozyModel] || [],
