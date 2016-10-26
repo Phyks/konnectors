@@ -7,10 +7,17 @@
  *
  * // TODO: What happens when moment is an invalid date?
  */
+
+// NPM imports
+const async = require('async');
+const moment = require('moment');
 const requestJson = require('request-json');
+
+// Konnectors imports
 const baseKonnector = require('../lib/base_konnector');
 const saveDataAndFile = require('../lib/save_data_and_file');
 
+// Models imports
 // TODO: Add support for others models
 const Bill = require('../models/bill');
 
@@ -23,68 +30,83 @@ const Bill = require('../models/bill');
  */
 const Converter = {
     // Conversion functions for CapDocument items to Bill
-    'subscriptions': function (data, moduleName) {  // Weboobtype: Subscription
+    'subscriptions': function (data, moduleName) {  // Weboob type: Subscription
         // Do nothing for subscriptions
     },
-    'bills': function (data, moduleName) {  // Weboobtype: Bill
+    'bills': function (data, moduleName) {  // Weboob type: Bill
         var parsedBills = [];
-        data.forEach(function (subscriptionID, bill) {
-            // TODO: Label not mapped
-            parsedBills.push({
-                type: '',  // TODO: What is it?
-                subtype: '',  // TODO: What is it?
-                date: moment(bill.date),
-                vendor: moduleName,
-                amount: parseFloat(bill.price),
-                vat: parseFloat(bill.vat),
-                currency: bill.currency,
-                plan: '',  // TODO: What is it?
-                pdfurl: bill.url,
-                content: '',  // TODO: What is it?
-                duedate: moment(bill.duedate),
-                startdate: moment(bill.startdate),
-                finishdate: moment(bill.finishdate),
+        async.eachOfSeries(data, function (bills, subscriptionID) {
+            async.eachSeries(bills, function (bill) {
+                // TODO: Label not mapped
+                parsedBills.push({
+                    type: '',  // TODO: What is it?
+                    subtype: '',  // TODO: What is it?
+                    date: moment(bill.date),
+                    vendor: moduleName,
+                    amount: parseFloat(bill.price),
+                    vat: parseFloat(bill.vat),
+                    currency: bill.currency,
+                    plan: '',  // TODO: What is it?
+                    pdfurl: bill.url,
+                    content: '',  // TODO: What is it?
+                    duedate: moment(bill.duedate),
+                    startdate: moment(bill.startdate),
+                    finishdate: moment(bill.finishdate),
+                });
             });
         });
-        return parsedBills;
+        return {
+            cozyModel: Bill,
+            parsedData: parsedBills,
+        };
     },
-    'history_bills': function (data, moduleName) {  // Weboobtype: Details
+    'history_bills': function (data, moduleName) {  // Weboob type: Details
         var parsedHistoryBills = [];
-        data.forEach(function (subscriptionID, historyBill) {
-            // TODO: Infos / label / quantity / unit not mapped
-            parsedHistoryBills.push({
-                type: '',  // TODO: What is it?
-                subtype: '',  // TODO: What is it?
-                date: moment(historyBill.datetime),
-                vendor: moduleName,
-                amount: parseFloat(historyBill.price),
-                vat: parseFloat(historyBill.vat),
-                currency: historyBill.currency,
-                plan: '',  // TODO: What is it?
-                pdfurl: historyBill.url,
-                content: '',  // TODO: What is it?
-            });
-        });
-        return parsedHistoryBills;
-    },
-    'detailed_bills': function (data, moduleName) {  // Weboobtype: Details
-        var parsedDetailedBills = [];
-        data.forEach(function (subscriptionID, detailedBill) {
-            parsedDetailedBills.push({
+        async.eachOfSeries(data, function (historyBills, subscriptionID) {
+            async.eachSeries(historyBills, function (historyBill) {
                 // TODO: Infos / label / quantity / unit not mapped
-                type: '',  // TODO: What is it?
-                subtype: '',  // TODO: What is it?
-                date: moment(detailedBill.datetime),
-                vendor: moduleName,
-                amount: parseFloat(detailedBill.price),
-                vat: parseFloat(detailedBill.vat),
-                currency: detailedBill.currency,
-                plan: '',  // TODO: What is it?
-                pdfurl: detailedBill.url,
-                content: '',  // TODO: What is it?
+                parsedHistoryBills.push({
+                    type: '',  // TODO: What is it?
+                    subtype: '',  // TODO: What is it?
+                    date: moment(historyBill.datetime),
+                    vendor: moduleName,
+                    amount: parseFloat(historyBill.price),
+                    vat: parseFloat(historyBill.vat),
+                    currency: historyBill.currency,
+                    plan: '',  // TODO: What is it?
+                    pdfurl: historyBill.url,
+                    content: '',  // TODO: What is it?
+                });
             });
         });
-        return parsedDetailedBills;
+        return {
+            cozyModel: Bill,
+            parsedData: parsedHistoryBills
+        };
+    },
+    'detailed_bills': function (data, moduleName) {  // Weboob type: Details
+        var parsedDetailedBills = [];
+        async.eachOfSeries(data, function (detailedBills, subscriptionID) {
+            async.eachSeries(detailedBills, function (detailedBill) {
+                parsedDetailedBills.push({
+                    // TODO: Infos / label / quantity / unit not mapped
+                    type: '',  // TODO: What is it?
+                    subtype: '',  // TODO: What is it?
+                    date: moment(detailedBill.datetime),
+                    vendor: moduleName,
+                    amount: parseFloat(detailedBill.price),
+                    vat: parseFloat(detailedBill.vat),
+                    currency: detailedBill.currency,
+                    plan: '',  // TODO: What is it?
+                    pdfurl: detailedBill.url,
+                    content: '',  // TODO: What is it?
+                });
+            });
+        });
+        return {
+            cozyModel: Bill,
+            parsedData: parsedDetailedBills
+        };
     },
 };
 
@@ -119,7 +141,7 @@ function fetchData(requiredFields, entries, data, next) {
     var client = requestJson.createClient(requiredFields.weboobURL);
     client.post(
         '/fetch',
-        { params: requiredFields.JSONModulesDescription },
+        JSON.parse(requiredFields.JSONModulesDescription),
         function (err, res, fetchedItems) {
             // Store fetched entries
             console.assert(res.statusCode == 200);
@@ -136,16 +158,18 @@ function fetchData(requiredFields, entries, data, next) {
  * Parse all the data we got back from the API, converting it to Cozy models.
  */
 function parseData(requiredFields, entries, data, next) {
-    entries.fetched = {};
-    data.rawEntries.forEach(function (moduleName, moduleData) {
-        moduleData.forEach(function (weboobType, fieldData) {
+    data.parsedEntries = {};
+    async.eachOfSeries(data.rawEntries, function (moduleData, moduleName) {
+        async.eachOfSeries(moduleData, function (fieldData, weboobType) {
             // Convert all the available entries and store them in parsed
             // entries
             let { cozyModel, parsedData } = Converter[weboobType](fieldData, moduleName);
-            entries.fetched[cozyModel] = Array.concat(
-                entries.fetched[cozyModel] || [],
-                parsedData
-            );
+            if (cozyModel !== undefined && parsedData !== undefined) {
+                data.parsedEntries[cozyModel] = [].concat(
+                    data.parsedEntries[cozyModel] || [],
+                    parsedData
+                );
+            }
         });
     });
     next();
@@ -162,7 +186,10 @@ function customSaveDataAndFile(requiredFields, entries, data, next) {
         vendor: 'weboob',  // TODO
         dateFormat: 'YYYYMMDD',
     };
-    saveDataAndFile(weboobKonnector.logger, Bill, fileOptions, ['bill']) (requiredFields, entries, data, next);
+    entries.fetched = data.parsedEntries[Bill];
+    if (entries.fetched !== undefined) {
+        saveDataAndFile(weboobKonnector.logger, Bill, fileOptions, ['bill']) (requiredFields, entries, data, next);
+    }
 }
 
 
