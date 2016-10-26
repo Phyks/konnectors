@@ -9,12 +9,12 @@ module.exports = Bill = cozydb.getModel 'Bill',
     amount: Number  # Bill amount
     vat: Number  # VAT part on the bill
     currency: String  # Currency of the bill
-    plan: String
+    plan: String  # TODO
     pdfurl: String  # Link to the bill document (not necessarily a PDF file)
-    binaryId: String
-    fileId: String
-    content: String
-    isRefund: Boolean  # Whether this bill is refundable
+    binaryId: String  # TODO
+    fileId: String  # TODO
+    content: String  # TODO
+    isRefund: Boolean  # Whether this bill is a refund
     duedate: Date  # Date by which the bill should be paid
     startdate: Date  # Date of the beginning of the billing period (if applicable)
     finishdate: Date  # Date of the end of the billing period (if applicable)

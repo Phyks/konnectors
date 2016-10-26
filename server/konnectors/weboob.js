@@ -92,7 +92,7 @@ const Converter = {
 /**
  * Konnector definition.
  */
-const weboobKonnector = module.exports = baseKonnector.createNew({
+const weboobKonnector = baseKonnector.createNew({
     name: 'Weboob',
     vendorLink: 'https://github.com/Phyks/cozyweboob',
     fields: {
@@ -158,5 +158,12 @@ function parseData(requiredFields, entries, data, next) {
  * Custom wrapper around saveDataAndFile layer, to use the connector own logger.
  */
 function customSaveDataAndFile(requiredFields, entries, data, next) {
-    return saveDataAndFile(weboobKonnector.logger, Bill, fileOptions, ['bill']);  // TODO: How to use?
+    const fileOptions = {
+        vendor: 'weboob',  // TODO
+        dateFormat: 'YYYYMMDD',
+    };
+    saveDataAndFile(weboobKonnector.logger, Bill, fileOptions, ['bill']) (requiredFields, entries, data, next);
 }
+
+
+module.exports = weboobKonnector;

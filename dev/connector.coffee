@@ -57,7 +57,7 @@ module.exports =
     change: (konnectorName, fields, callback) ->
         account = {}
         for field in fields
-            [key, value] = field.split(':')
+            [key, value] = field.split(/:(.+)?/)
             account[key] = value
 
         Konnector = require '../server/models/konnector'
