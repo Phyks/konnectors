@@ -172,8 +172,6 @@ function parseData(requiredFields, entries, data, next) {
             // Convert all the available entries and store them in parsed
             // entries
             let { cozyModel, parsedData } = Converter[weboobType](fieldData, moduleName);
-            console.log(cozyModel);
-            console.log(parsedData);
             if (cozyModel !== undefined && parsedData !== undefined) {
                 data.parsedEntries[cozyModel] = [].concat(
                     data.parsedEntries[cozyModel] || [],
