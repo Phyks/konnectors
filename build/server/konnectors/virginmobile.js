@@ -1,7 +1,7 @@
 'use strict';
 
 var request = require('request');
-var cheerio = require('cheerio');
+var requestJSON = require('request-json');
 var moment = require('moment');
 
 var filterExisting = require('../lib/filter_existing');
@@ -13,14 +13,14 @@ var factory = require('../lib/base_konnector');
 var Bill = require('../models/bill');
 
 var logger = require('printit')({
-  prefix: 'Materiel.net',
+  prefix: 'Virginmobile',
   date: true
 });
 
-var baseURL = 'https://www.materiel.net/';
+var baseURL = 'https://espaceclient.virginmobile.fr/';
 
 var fileOptions = {
-  vendor: 'Materiel.net',
+  vendor: 'Virgin mobile',
   dateFormat: 'YYYYMMDD'
 };
 
@@ -29,37 +29,34 @@ function login(requiredFields, billInfos, data, next) {
   var signInOptions = {
     method: 'POST',
     jar: true,
-    url: baseURL + 'pm/client/logincheck.nt.html',
+    url: baseURL + 'login_check',
     form: {
       login: requiredFields.login,
-      pass: requiredFields.password
+      password: requiredFields.password,
+      _target_path: 'factures-echeances'
     }
   };
 
-  var billsOptions = {
-    method: 'GET',
-    jar: true,
-    url: baseURL + 'pm/client/commande.html'
-  };
+  var client = requestJSON.createClient(baseURL);
 
   logger.info('Signing in');
-  request(signInOptions, function (err) {
+  request(signInOptions, function (err, res) {
     if (err) {
       logger.error('Signin failed');
       return next('bad credentials');
     }
 
+    client.headers.Cookie = res.headers['set-cookie'];
+
     // Download bill information page.
     logger.info('Fetching bills list');
-    request(billsOptions, function (err, res, body) {
-      if (err) {
+    client.get('api/getFacturesData', function (err, res, body) {
+      if (err || !body.success) {
         logger.error('An error occured while fetching bills list');
         return next('no bills retrieved');
       }
 
-      // TODO: check the other pages
-
-      data.html = body;
+      data.content = body.data;
       next();
     });
   });
@@ -68,26 +65,42 @@ function login(requiredFields, billInfos, data, next) {
 function parsePage(requiredFields, bills, data, next) {
   bills.fetched = [];
 
-  var $ = cheerio.load(data.html);
-  var container = $('#client');
+  var invoices = data.content.infoFacturation.invoices;
 
-  container.find('table.EpCmdList tr[class^="Line"]').each(function (idx, element) {
-    var cells = $(element).find('td');
-    var ref = cells.eq(0).text().trim();
-    var date = cells.eq(1).text().trim();
-    var price = cells.eq(2).text().trim().replace(' €', '').replace(',', '.');
-    var status = cells.eq(3).text().trim().toLowerCase();
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
 
-    if (status === 'terminée' || status === 'commande expédiée') {
-      var bill = {
-        date: moment(date, 'DD/MM/YYYY'),
-        amount: parseFloat(price),
-        pdfurl: baseURL + 'pm/client/facture.nt.html?ref=' + ref
-      };
+  try {
+    for (var _iterator = invoices[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var inv = _step.value;
 
-      bills.fetched.push(bill);
+      if (inv.pdfDispo) {
+        var bill = {
+          date: moment(inv.invoiceDate, 'DD/MM/YYYY'),
+          amount: parseFloat(inv.amount.unite + '.' + inv.amount.centimes),
+          pdfurl: baseURL + 'api/getFacturePdf/' + inv.invoiceNumber
+        };
+
+        if (bill.date && bill.amount && bill.pdfurl) {
+          bills.fetched.push(bill);
+        }
+      }
     }
-  });
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator.return) {
+        _iterator.return();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
 
   logger.info(bills.fetched.length + ' bill(s) retrieved');
   next();
@@ -112,9 +125,9 @@ function buildNotifContent(requiredFields, entries, data, next) {
 }
 
 module.exports = factory.createNew({
-  name: 'Materiel_net',
-  description: 'konnector description materiel_net',
-  vendorLink: baseURL,
+  name: 'virginmobile',
+  description: 'konnector description virginmobile',
+  vendorLink: 'https://www.virginmobile.fr/',
 
   fields: {
     login: 'text',
@@ -130,6 +143,6 @@ module.exports = factory.createNew({
     maxDateDelta: 1,
     model: Bill,
     amountDelta: 0.1,
-    identifier: ['materiel.net']
+    identifier: ['virgin mobile']
   }), buildNotifContent]
 });
