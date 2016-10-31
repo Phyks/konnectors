@@ -13,7 +13,7 @@ displayKonnector = (konnector) ->
     # The fields are in the konnector file
     konnectorConfig = {}
     try
-        konnectorConfig = require "../build/server/konnectors/#{konnector.slug}"
+        konnectorConfig = require "../server/konnectors/#{konnector.slug}"
     catch
         log.error "Konnector file name and konnector slug do not match.\
                     Slug is: #{konnector.slug}"
@@ -33,8 +33,8 @@ module.exports =
 
     # Run an import to avoid running the full web app.
     run: (konnectorName, callback) ->
-        Konnector = require '../build/server/models/konnector'
-        konnectorConfig = require "../build/server/konnectors/#{konnectorName}"
+        Konnector = require '../server/models/konnector'
+        konnectorConfig = require "../server/konnectors/#{konnectorName}"
         Konnector.get konnectorName, (err, konnector) ->
             return callback err if err
             konnector.appendConfigData konnectorConfig
@@ -60,8 +60,8 @@ module.exports =
                 value = JSON.stringify(value)
             account[key] = value
 
-        Konnector = require '../build/server/models/konnector'
-        konnectorMap = require '../build/server/lib/konnector_hash'
+        Konnector = require '../server/models/konnector'
+        konnectorMap = require '../server/lib/konnector_hash'
         Konnector.all (err, konnectors) ->
             return callback err if err
 
@@ -86,7 +86,7 @@ module.exports =
     # Display konnector information stored in the database. It helps debugging
     # by ensuring that values are properly set.
     display: (konnectorName, callback) ->
-        Konnector = require '../build/server/models/konnector'
+        Konnector = require '../server/models/konnector'
         Konnector.all (err, konnectors) ->
             if konnectorName
                 konnector = konnectors.find (konnector) ->
@@ -108,7 +108,7 @@ module.exports =
 
 
     init: (callback) ->
-        initKonnectors = require '../build/server/init/konnectors'
+        initKonnectors = require '../server/init/konnectors'
         cozydb.configure {}, null, ->
             initKonnectors ->
                 callback()

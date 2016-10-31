@@ -9,12 +9,17 @@ module.exports = Bill = cozydb.getModel('Bill', {
   date: Date,
   vendor: String,
   amount: Number,
+  vat: Number,
+  currency: String,
   plan: String,
   pdfurl: String,
   binaryId: String,
   fileId: String,
   content: String,
-  isRefund: Boolean
+  isRefund: Boolean,
+  duedate: Date,
+  startdate: Date,
+  finishdate: Date
 });
 
 Bill.all = function(callback) {

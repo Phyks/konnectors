@@ -109,7 +109,7 @@ Konnector.prototype.injectEncryptedFields = function() {
 Konnector.prototype.removeEncryptedFields = function(fields) {
   var account, j, len, name, password, passwords, ref, type;
   if (fields == null) {
-    log.warn("Fields variable undefined, use curren one instead.");
+    log.warn("Fields variable undefined, use current one instead.");
     fields = this.getFields();
   }
   this.cleanFieldValues();
