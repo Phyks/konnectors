@@ -9,7 +9,7 @@ log = require('printit')
 
 getModel = (modelName) ->
     try
-        Model = require path.join __dirname, "../server/models/#{modelName}"
+        Model = require path.join __dirname, "../build/server/models/#{modelName}"
         return Model
     catch
         log.error "Cannot find given model."
