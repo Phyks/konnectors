@@ -21,7 +21,13 @@ module.exports = {
         return res.sendStatus(404);
       } else {
         konnector.injectEncryptedFields();
-        konnectorModule = require("../konnectors/" + konnector.slug);
+        konnectorModule = require(
+                    path.join(
+                        "../konnectors/",
+                        konnector.slug
+                    )
+                );
+        konnectorModule = konnectorModule.default !== undefined ? konnectorModule.default : konnectorModule;
         if (konnectorModule.customView != null) {
           konnector.customView = konnectorModule.customView;
         }

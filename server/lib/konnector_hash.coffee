@@ -2,7 +2,7 @@ fs = require 'fs'
 path = require 'path'
 
 currentPath = path.dirname fs.realpathSync __filename
-modulesPath = path.join currentPath, '../../build/server/', 'konnectors'
+modulesPath = path.join currentPath, '../konnectors'
 
 
 # Tell if filename is Javascript file or is a Coffeescript file. Detection
@@ -25,6 +25,7 @@ getKonnectorModules = ->
                 name = moduleFile.split('.')[0]
                 modulePath = path.join modulesPath, name
                 modules[name] = require modulePath
+                `modules[name] = modules[name].default !== undefined ? modules[name].default : modules[name]`
 
     return modules
 

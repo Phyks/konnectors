@@ -4,12 +4,9 @@
  *
  * You need a running [cozyweboob](https://github.com/Phyks/cozyweboob)
  * somewhere.
- *
- * // TODO: What happens when moment is an invalid date?
  */
 
 // NPM imports
-import moment from 'moment';
 import requestJson from 'request-json';
 
 // Konnectors imports

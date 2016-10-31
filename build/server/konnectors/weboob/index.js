@@ -4,8 +4,6 @@
  *
  * You need a running [cozyweboob](https://github.com/Phyks/cozyweboob)
  * somewhere.
- *
- * // TODO: What happens when moment is an invalid date?
  */
 
 // NPM imports
@@ -13,10 +11,6 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-
-var _moment = require('moment');
-
-var _moment2 = _interopRequireDefault(_moment);
 
 var _requestJson = require('request-json');
 

@@ -4,6 +4,14 @@
  * Maps all the available weboob types in the exported JSON to function
  * exporting a matching Cozy Model.
  */
+
+// NPM imports
+import moment from 'moment';
+
+// Local imports
+import Bill from '../../../models/bill';
+
+
 const BillConverters = {
     // Conversion functions for CapDocument items to Bill
     'subscriptions': function (data, moduleName) {  // Weboob type: Subscription

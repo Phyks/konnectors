@@ -18,7 +18,13 @@ module.exports = function(konnector, callback) {
   var model, ref;
   if (((ref = konnector.accounts) != null ? ref.length : void 0) > 0 && konnector.isImporting === false) {
     log.info("Run import for " + konnector.slug + ".");
-    model = require("../konnectors/" + konnector.slug);
+    model = require(
+            path.join(
+                "../konnectors/",
+                konnector.slug
+            )
+        );
+    model = model.default !== undefined ? model.default : model;
     return konnector["import"](function(err, notifContents) {
       var data, localizationKey;
       if ((err != null) && ((typeof err === 'object' && Object.keys(err).length > 0) || typeof err === String)) {

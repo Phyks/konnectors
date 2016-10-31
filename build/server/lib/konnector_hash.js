@@ -7,7 +7,7 @@ path = require('path');
 
 currentPath = path.dirname(fs.realpathSync(__filename));
 
-modulesPath = path.join(currentPath, '../../build/server/', 'konnectors');
+modulesPath = path.join(currentPath, '../konnectors');
 
 isCoffeeOrJsFile = function(fileName) {
   var extension, firstChar;
@@ -26,6 +26,7 @@ getKonnectorModules = function() {
       name = moduleFile.split('.')[0];
       modulePath = path.join(modulesPath, name);
       modules[name] = require(modulePath);
+      modules[name] = modules[name].default !== undefined ? modules[name].default : modules[name];
     }
   }
   return modules;

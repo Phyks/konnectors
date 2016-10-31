@@ -3,12 +3,25 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+
+var _moment = require('moment');
+
+var _moment2 = _interopRequireDefault(_moment);
+
+var _bill = require('../../../models/bill');
+
+var _bill2 = _interopRequireDefault(_bill);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 /**
  * Converters between exported data and Bill model in Cozy Konnectors.
  *
  * Maps all the available weboob types in the exported JSON to function
  * exporting a matching Cozy Model.
  */
+
+// NPM imports
 var BillConverters = {
     // Conversion functions for CapDocument items to Bill
     'subscriptions': function subscriptions(data, moduleName) {
@@ -28,7 +41,7 @@ var BillConverters = {
                 parsedBills.push({
                     type: '', // TODO: What is it?
                     subtype: '', // TODO: What is it?
-                    date: moment(bill.date),
+                    date: (0, _moment2.default)(bill.date),
                     vendor: moduleName,
                     amount: parseFloat(bill.price),
                     vat: parseFloat(bill.vat),
@@ -36,14 +49,14 @@ var BillConverters = {
                     plan: '', // TODO: What is it?
                     pdfurl: bill.url,
                     content: '', // TODO: What is it?
-                    duedate: bill.duedate ? moment(bill.duedate) : null,
-                    startdate: bill.startdate ? moment(bill.startdate) : null,
-                    finishdate: bill.finishdate ? moment(bill.finishdate) : null
+                    duedate: bill.duedate ? (0, _moment2.default)(bill.duedate) : null,
+                    startdate: bill.startdate ? (0, _moment2.default)(bill.startdate) : null,
+                    finishdate: bill.finishdate ? (0, _moment2.default)(bill.finishdate) : null
                 });
             });
         });
         return {
-            cozyModel: Bill,
+            cozyModel: _bill2.default,
             parsedData: parsedBills
         };
     },
@@ -56,7 +69,7 @@ var BillConverters = {
                 parsedHistoryBills.push({
                     type: '', // TODO: What is it?
                     subtype: '', // TODO: What is it?
-                    date: moment(historyBill.datetime),
+                    date: (0, _moment2.default)(historyBill.datetime),
                     vendor: moduleName,
                     amount: parseFloat(historyBill.price),
                     vat: parseFloat(historyBill.vat),
@@ -67,7 +80,7 @@ var BillConverters = {
             });
         });
         return {
-            cozyModel: Bill,
+            cozyModel: _bill2.default,
             parsedData: parsedHistoryBills
         };
     },
@@ -80,7 +93,7 @@ var BillConverters = {
                     // TODO: Infos / label / quantity / unit not mapped
                     type: '', // TODO: What is it?
                     subtype: '', // TODO: What is it?
-                    date: moment(detailedBill.datetime),
+                    date: (0, _moment2.default)(detailedBill.datetime),
                     vendor: moduleName,
                     amount: parseFloat(detailedBill.price),
                     vat: parseFloat(detailedBill.vat),
@@ -91,9 +104,11 @@ var BillConverters = {
             });
         });
         return {
-            cozyModel: Bill,
+            cozyModel: _bill2.default,
             parsedData: parsedDetailedBills
         };
     }
 };
+
+// Local imports
 exports.default = BillConverters;
