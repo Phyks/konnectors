@@ -87,8 +87,8 @@ Note: only fields described in the connector file are stored.`
 } else if (program.list) {
     var opts = {
         modelName: 'konnector',
-        columns: 'slug,vendor',
-        widths: '20,20'
+        columns: 'slug',
+        widths: '20'
     };
     data.show(opts, () => log.lineBreak(), log);
 } else {
