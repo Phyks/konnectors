@@ -112,7 +112,7 @@ export default {
             let konnector = konnectors.find(konnector => konnector.slug === konnectorName);
             let konnectorMetaData = konnectorMap[konnector.slug];
 
-            if (konnector.accounts && konnectors.accounts.length > 0) {
+            if (konnector.accounts && konnector.accounts.length > 0) {
                 var { accounts } = konnector;
                 for (key in account) {
                     let fields = konnector.getFields();

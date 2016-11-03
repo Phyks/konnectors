@@ -180,3 +180,4 @@ module.exports =
     "calendar": "Le calendrier dans lequel les événements seront importés"
     "url": "URL cible"
     "tag": "Tag"
+    "bearerToken": "OAuth2 bearer token"

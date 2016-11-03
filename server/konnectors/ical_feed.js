@@ -1,26 +1,42 @@
+/**
+ * The goal of this connector is to fetch ICS file from an URL, parse it and
+ * and store events in the Cozy.
+ *
+ * TODO:
+ *      - default reminder, #480
+ *      - saveEvents, #575
+ *
+ * Done:
+ *      - HTTP auth, #479
+ *      - ical as attachment, #231 / #238
+ *      - duplicates, #235 / #566
+ */
+
 'use strict';
 
-const async = require('async');
-const request = require('request');
-const cozydb = require('cozydb');
-const ical = require('cozy-ical');
+// NPM imports
+import async from 'async';
+import request from 'request';
+import cozydb from 'cozydb';
+import ical from 'cozy-ical';
 
-const baseKonnector = require('../lib/base_konnector');
-const localization = require('../lib/localization_manager');
+// Local imports
+import baseKonnector from '../lib/base_konnector';
+import localization from '../lib/localization_manager';
 
-const Event = require('../models/event');
+// Models
+import Event from '../models/event';
 
 
-/*
- * The goal of this connector is to fetch ICS file from an URL, parse it and
- * and store events in the Cozy
- */
-const connector = module.exports = baseKonnector.createNew({
+const connector = baseKonnector.createNew({
   name: 'Ical Feed',
 
   fields: {
     url: 'text',
     calendar: 'text',
+    login: 'text',
+    password: 'password',
+    bearerToken: 'password'
   },
 
   models: [Event],
@@ -32,13 +48,34 @@ const connector = module.exports = baseKonnector.createNew({
     saveEvents,
     buildNotifContent,
   ],
-
 });
 
 
+/**
+ * downloadFile
+ *
+ * Download the ICS file from the given URL.
+ */
 function downloadFile(requiredFields, entries, data, next) {
   connector.logger.info('Downloading ICS file...');
-  request.get(requiredFields.url, (err, res, body) => {
+
+  let auth = {};
+  if (requiredFields.login || requiredFields.password) {
+      auth = {
+          'auth': {
+              'user': requiredFields.login,
+              'password': requiredFields.password,
+          },
+      };
+  } else if (requiredFields.bearer) {
+      auth = {
+          'auth': {
+              'bearer': requiredFields.bearerToken,
+          },
+      };
+  }
+
+  request.get(requiredFields.url, auth, (err, res, body) => {
     if (err) {
       connector.logger.error('Download failed.');
       return next('request error');
@@ -51,15 +88,21 @@ function downloadFile(requiredFields, entries, data, next) {
 }
 
 
-/* Parse file, based on timezone set at user level. */
+/**
+ * parseFile
+ *
+ * Parse file, based on timezone set at user level.
+ */
 function parseFile(requiredFields, entries, data, next) {
   connector.logger.info('Parsing ICS file...');
   cozydb.api.getCozyUser((err, user) => {
     if (err || user === null) {
       connector.logger.error('Cannot retrieve Cozy user timezone.');
       connector.logger.error('Parsing cannot be performed.');
-      if (err === null) {
-        connector.logger.error('Cannot retrieve Cozy user timezone.');
+      if (err) {
+        connector.logger.error(err);
+      } else {
+        connector.logger.error('Cannot retrieve Cozy user.');
       }
 
       return next('parsing error');
@@ -81,12 +124,22 @@ function parseFile(requiredFields, entries, data, next) {
 }
 
 
+/**
+ * extractEvents
+ *
+ * Extract events from the parsed ics file.
+ */
 function extractEvents(requiredFields, entries, data, next) {
   entries.events = Event.extractEvents(data.result, requiredFields.calendar);
   return next();
 }
 
 
+/**
+ * saveEvents
+ *
+ * Save fetched events from the ics into cozy db.
+ */
 function saveEvents(requiredFields, entries, data, next) {
   connector.logger.info('Saving Events...');
   entries.nbCreations = 0;
@@ -119,6 +172,11 @@ function saveEvents(requiredFields, entries, data, next) {
 }
 
 
+/**
+ * buildNotifContent
+ *
+ * Build notifications content.
+ */
 function buildNotifContent(requiredFields, entries, data, next) {
   if (entries.nbCreations > 0) {
     const localizationKey = 'notification events created';
@@ -140,3 +198,6 @@ function buildNotifContent(requiredFields, entries, data, next) {
   }
   return next();
 }
+
+
+export default connector;
